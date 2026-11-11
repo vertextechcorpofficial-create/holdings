@@ -68,6 +68,7 @@ export interface DashboardGroup {
     id: number;
     category: string;
     group_name: string;
+    ai_analysis_tier?: string | null;
     container_id?: number | { id: number; name: string; description?: string | null } | null;
     container?: {
         id: number | string;

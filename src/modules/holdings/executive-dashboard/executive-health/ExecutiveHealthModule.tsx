@@ -18,8 +18,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { fetchExecutiveHealthData, fetchCompanyTargets, fetchDivisionTargets, getDivisions } from "./providers/fetchProvider";
 import { VSalesPerformanceDataDto, TargetSettingExecutive, TargetSettingDivision } from "./types";
+import { BasicAIAnalysis, generateDistributionSalesAIBullets } from "@/modules/holdings/executive-dashboard/components/BasicAIAnalysis";
 
-function ExecutiveHealthContent({ groupId }: { groupId: string }) {
+function ExecutiveHealthContent({ groupId, aiAnalysisTier }: { groupId: string; aiAnalysisTier?: string | null }) {
     const router = useRouter();
     const searchParams = useSearchParams();
     
@@ -138,6 +139,18 @@ function ExecutiveHealthContent({ groupId }: { groupId: string }) {
         router.push(`/holdings/executive-dashboard/sales/${groupId}/managerial-supplier?${params.toString()}`);
     };
 
+    const aiBullets = useMemo(() => {
+        const topDiv = divisionHealth.length > 0 ? divisionHealth[0] : null;
+        return generateDistributionSalesAIBullets({
+            sales: companyHealth.actual,
+            target: companyHealth.target,
+            achievement: companyHealth.achievement,
+            topDivisionName: topDiv?.name,
+            topDivisionSales: topDiv?.sales,
+            divisionCount: divisionHealth.length,
+        });
+    }, [companyHealth, divisionHealth]);
+
     return (
         <div className="space-y-8 p-6 min-h-screen bg-background text-foreground">
             {/* --- HEADER --- */}
@@ -172,6 +185,14 @@ function ExecutiveHealthContent({ groupId }: { groupId: string }) {
                     </div>
                 </div>
             </div>
+
+            {/* --- BASIC AI ANALYSIS (Renders when ai_analysis_tier === 'basic') --- */}
+            <BasicAIAnalysis
+                tier={aiAnalysisTier}
+                bulletPoints={aiBullets}
+                variant="spacious"
+                className="w-full"
+            />
 
             {/* --- METRIC STRIP --- */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -405,10 +426,10 @@ function ExecutiveHealthContent({ groupId }: { groupId: string }) {
     );
 }
 
-export default function ExecutiveHealthModule({ groupId }: { groupId: string }) {
+export default function ExecutiveHealthModule({ groupId, aiAnalysisTier }: { groupId: string; aiAnalysisTier?: string | null }) {
     return (
         <Suspense fallback={<div className="flex h-screen w-full items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}>
-            <ExecutiveHealthContent groupId={groupId} />
+            <ExecutiveHealthContent groupId={groupId} aiAnalysisTier={aiAnalysisTier} />
         </Suspense>
     );
 }
