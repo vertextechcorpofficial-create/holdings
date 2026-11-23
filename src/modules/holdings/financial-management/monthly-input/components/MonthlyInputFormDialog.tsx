@@ -277,10 +277,12 @@ export function MonthlyInputFormDialog({
     placeholder = "0.00",
     optional = false
   ) => (
-    <div className="space-y-1.5">
-      <Label htmlFor={key} className="text-xs font-medium">
-        {label}
-        {optional && <span className="ml-1 text-muted-foreground font-normal">(optional)</span>}
+    <div className="flex flex-col justify-between gap-1.5">
+      <Label htmlFor={key} className="text-xs font-medium leading-tight">
+        <span>{label}</span>
+        {optional && (
+          <span className="ml-1 text-[11px] font-normal text-muted-foreground">(opt.)</span>
+        )}
       </Label>
       <Input
         id={key}
@@ -289,14 +291,14 @@ export function MonthlyInputFormDialog({
         value={form[key]}
         onChange={(e) => setField(key, e.target.value)}
         placeholder={placeholder}
-        className="h-9 text-right font-mono"
+        className="h-9 w-full text-right font-mono"
       />
     </div>
   );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle>
             {editingRecord ? "Edit Monthly Financial Input" : "Add Monthly Financial Input"}
@@ -307,7 +309,7 @@ export function MonthlyInputFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5 pt-1">
           {formError && (
             <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {formError}
@@ -315,14 +317,14 @@ export function MonthlyInputFormDialog({
           )}
 
           {/* Section 1: Period & Company */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
+            <div className="flex flex-col gap-1.5 sm:col-span-6">
               <Label className="text-xs font-medium">Company / Subsidiary</Label>
               <Select
                 value={form.company_id}
                 onValueChange={(val) => setField("company_id", val)}
               >
-                <SelectTrigger className="h-9">
+                <SelectTrigger className="h-9 w-full overflow-hidden [&>span]:truncate">
                   <SelectValue placeholder="Select company" />
                 </SelectTrigger>
                 <SelectContent>
@@ -334,7 +336,7 @@ export function MonthlyInputFormDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-1.5 sm:col-span-3">
               <Label htmlFor="month_end" className="text-xs font-medium">
                 Month End Date
               </Label>
@@ -343,22 +345,22 @@ export function MonthlyInputFormDialog({
                 type="date"
                 value={form.month_end}
                 onChange={(e) => setField("month_end", e.target.value)}
-                className="h-9"
+                className="h-9 w-full"
                 required
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-1.5 sm:col-span-3">
               <Label className="text-xs font-medium">Currency</Label>
               <Select
                 value={form.currency_code}
                 onValueChange={(val) => setField("currency_code", val)}
               >
-                <SelectTrigger className="h-9">
+                <SelectTrigger className="h-9 w-full overflow-hidden [&>span]:truncate">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PHP">PHP (Philippine Peso)</SelectItem>
-                  <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                  <SelectItem value="PHP">PHP — Peso</SelectItem>
+                  <SelectItem value="USD">USD — Dollar</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -377,7 +379,7 @@ export function MonthlyInputFormDialog({
                 </strong>
               </span>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {renderNumberInput("cash_and_equivalents", "Cash & Cash Equivalents")}
               {renderNumberInput("short_term_investments", "Short-term Investments")}
               {renderNumberInput("trade_receivables", "Trade Receivables")}
@@ -386,7 +388,7 @@ export function MonthlyInputFormDialog({
               {renderNumberInput(
                 "total_current_assets_override",
                 "Total Current Assets",
-                "Leave blank to auto-sum",
+                "Auto-sum if blank",
                 true
               )}
             </div>
@@ -415,7 +417,7 @@ export function MonthlyInputFormDialog({
                 </strong>
               </span>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {renderNumberInput("trade_payables", "Trade Payables")}
               {renderNumberInput("non_trade_payables", "Non-trade Payables")}
               {renderNumberInput("current_portion_loans", "Current Portion of Loans")}
@@ -423,7 +425,7 @@ export function MonthlyInputFormDialog({
               {renderNumberInput(
                 "total_current_liabilities_override",
                 "Total Current Liabilities",
-                "Leave blank to auto-sum",
+                "Auto-sum if blank",
                 true
               )}
             </div>
