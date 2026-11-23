@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useFinancialHealthData } from "../hooks/useFinancialHealthData";
 import { FinancialHealthMonthly } from "../types/financial-health.schema";
-import { calculateRatios, formatRatioValue } from "../utils/ratio-calculator";
+import { calculateRatios, formatMonthEndDate, formatRatioValue } from "../utils/ratio-calculator";
 import { MonthlyInputFormDialog } from "./components/MonthlyInputFormDialog";
 
 export function MonthlyInputModule() {
@@ -218,7 +218,7 @@ export function MonthlyInputModule() {
                       <TableRow key={rec.id ?? `${rec.company_id}-${rec.month_end}`}>
                         <TableCell className="font-medium whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
-                            {rec.month_end}
+                            {formatMonthEndDate(rec.month_end)}
                             {hasVariance && (
                               <span title="Override total differs from component sum">
                                 <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
@@ -318,7 +318,8 @@ export function MonthlyInputModule() {
             <AlertDialogTitle>Delete Monthly Financial Input?</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently remove the financial data for{" "}
-              <strong>{deleteTarget?.month_end}</strong>. This action cannot be undone.
+              <strong>{formatMonthEndDate(deleteTarget?.month_end)}</strong>. This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

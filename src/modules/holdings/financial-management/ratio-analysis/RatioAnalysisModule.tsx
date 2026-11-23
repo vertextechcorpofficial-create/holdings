@@ -52,6 +52,7 @@ import {
   RatioGuideItem,
   calculateRatios,
   consolidateMonthlyInputs,
+  formatMonthEndDate,
   formatRatioValue,
 } from "../utils/ratio-calculator";
 
@@ -105,7 +106,7 @@ export function RatioAnalysisModule() {
           const val = row[col.key];
           return typeof val === "number" ? val : null;
         });
-        ws.addRow([row.month_end, ...values]);
+        ws.addRow([formatMonthEndDate(row.month_end), ...values]);
       }
 
       ws.columns.forEach((col, idx) => {
@@ -310,7 +311,7 @@ export function RatioAnalysisModule() {
                     {ratioRows.map((row) => (
                       <TableRow key={`${row.company_id}-${row.month_end}`}>
                         <TableCell className="sticky left-0 z-10 bg-background font-medium whitespace-nowrap">
-                          {row.month_end}
+                          {formatMonthEndDate(row.month_end)}
                         </TableCell>
                         {visibleColumns.map((col) => {
                           const rawVal = row[col.key];

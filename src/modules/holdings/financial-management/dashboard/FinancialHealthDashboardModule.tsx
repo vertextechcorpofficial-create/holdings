@@ -53,6 +53,8 @@ import {
   RATIO_GUIDE,
   calculateRatios,
   consolidateMonthlyInputs,
+  formatMonthEndDate,
+  formatMonthShort,
   formatRatioValue,
 } from "../utils/ratio-calculator";
 
@@ -94,7 +96,7 @@ export function FinancialHealthDashboardModule() {
   const chartData = useMemo(
     () =>
       series.slice(-24).map((row) => ({
-        month: row.month_end,
+        month: formatMonthShort(row.month_end),
         currentRatio: row.current_ratio !== null ? Number(row.current_ratio.toFixed(2)) : null,
         quickRatio: row.quick_ratio !== null ? Number(row.quick_ratio.toFixed(2)) : null,
         cashRatio: row.cash_ratio !== null ? Number(row.cash_ratio.toFixed(2)) : null,
@@ -161,8 +163,8 @@ export function FinancialHealthDashboardModule() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
               <span>Reporting Month:</span>
-              <Badge variant="secondary" className="font-mono">
-                {currentSnapshot ? currentSnapshot.month_end : "No data"}
+              <Badge variant="secondary" className="font-medium">
+                {currentSnapshot ? formatMonthEndDate(currentSnapshot.month_end) : "No data"}
               </Badge>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -194,7 +196,7 @@ export function FinancialHealthDashboardModule() {
                   <SelectItem value="latest">Latest Month</SelectItem>
                   {[...series].reverse().map((s) => (
                     <SelectItem key={s.month_end} value={s.month_end}>
-                      {s.month_end}
+                      {formatMonthEndDate(s.month_end)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -381,7 +383,7 @@ export function FinancialHealthDashboardModule() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">
-                  Latest Period Summary ({currentSnapshot.month_end})
+                  Latest Period Summary ({formatMonthEndDate(currentSnapshot.month_end)})
                 </CardTitle>
                 <CardDescription>
                   Compare with prior months, budget, business context, and loan covenants.

@@ -1,3 +1,4 @@
+import { format as formatDateFns, isValid, parseISO } from "date-fns";
 import { FinancialHealthMonthly } from "../types/financial-health.schema";
 
 export interface CalculatedRatios {
@@ -397,5 +398,19 @@ export function formatRatioValue(
     default:
       return value.toFixed(2);
   }
+}
+
+export function formatMonthEndDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "—";
+  const parsed = parseISO(dateStr);
+  if (!isValid(parsed)) return dateStr;
+  return formatDateFns(parsed, "MMM dd, yyyy");
+}
+
+export function formatMonthShort(dateStr: string | null | undefined): string {
+  if (!dateStr) return "—";
+  const parsed = parseISO(dateStr);
+  if (!isValid(parsed)) return dateStr;
+  return formatDateFns(parsed, "MMM yyyy");
 }
 
