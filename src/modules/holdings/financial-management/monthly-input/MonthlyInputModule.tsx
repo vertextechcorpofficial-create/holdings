@@ -146,7 +146,7 @@ export function MonthlyInputModule() {
             </div>
             <div className="flex items-center gap-2">
               <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                <SelectTrigger className="w-[240px] h-9">
+                <SelectTrigger className="h-9 w-[260px] overflow-hidden [&>span]:truncate">
                   <SelectValue placeholder="Filter by company" />
                 </SelectTrigger>
                 <SelectContent>

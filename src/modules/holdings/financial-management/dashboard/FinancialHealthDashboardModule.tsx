@@ -175,7 +175,7 @@ export function FinancialHealthDashboardModule() {
                   setSelectedMonth("latest");
                 }}
               >
-                <SelectTrigger className="w-[230px] h-9">
+                <SelectTrigger className="h-9 w-[260px] overflow-hidden [&>span]:truncate">
                   <SelectValue placeholder="Select company" />
                 </SelectTrigger>
                 <SelectContent>

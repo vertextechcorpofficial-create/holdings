@@ -10,10 +10,12 @@ import {
   Info,
   Loader2,
   RefreshCw,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -83,6 +85,8 @@ export function RatioAnalysisModule() {
       .map(calculateRatios);
   }, [records, selectedCompanyId]);
 
+  const latestRow = ratioRows.length > 0 ? ratioRows[ratioRows.length - 1] : null;
+
   const visibleColumns = useMemo(() => {
     if (category === "all") return RATIO_ANALYSIS_COLUMNS;
     return RATIO_ANALYSIS_COLUMNS.filter((c) => c.category === category);
@@ -110,7 +114,7 @@ export function RatioAnalysisModule() {
       }
 
       ws.columns.forEach((col, idx) => {
-        col.width = idx === 0 ? 14 : 20;
+        col.width = idx === 0 ? 16 : 20;
       });
 
       const buffer = await wb.xlsx.writeBuffer();
@@ -153,7 +157,7 @@ export function RatioAnalysisModule() {
                   Ratio Guide
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+              <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[85vh] overflow-y-auto p-6">
                 <DialogHeader>
                   <DialogTitle>Ratio Guide &amp; Interpretation Notes</DialogTitle>
                   <DialogDescription>
@@ -161,23 +165,25 @@ export function RatioAnalysisModule() {
                     seasonality, and loan covenants.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="rounded-md border overflow-x-auto">
+                <div className="overflow-x-auto rounded-md border">
                   <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-muted/40">
                       <TableRow>
-                        <TableHead>Metric</TableHead>
-                        <TableHead>Formula</TableHead>
-                        <TableHead>Interpretation / Caution</TableHead>
+                        <TableHead className="px-4 py-3 whitespace-nowrap">Metric</TableHead>
+                        <TableHead className="px-4 py-3 whitespace-nowrap">Formula</TableHead>
+                        <TableHead className="px-4 py-3">Interpretation / Caution</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {RATIO_GUIDE.map((item) => (
-                        <TableRow key={item.key}>
-                          <TableCell className="font-medium whitespace-nowrap">
+                        <TableRow key={item.key} className="even:bg-muted/15">
+                          <TableCell className="px-4 py-2.5 font-medium whitespace-nowrap">
                             {item.label}
                           </TableCell>
-                          <TableCell className="text-xs font-mono">{item.formula}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
+                          <TableCell className="px-4 py-2.5 text-xs font-mono">
+                            {item.formula}
+                          </TableCell>
+                          <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
                             {item.interpretation}
                           </TableCell>
                         </TableRow>
@@ -187,7 +193,11 @@ export function RatioAnalysisModule() {
                 </div>
               </DialogContent>
             </Dialog>
-            <Button size="sm" onClick={handleExportExcel} disabled={exporting || ratioRows.length === 0}>
+            <Button
+              size="sm"
+              onClick={handleExportExcel}
+              disabled={exporting || ratioRows.length === 0}
+            >
               {exporting ? (
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               ) : (
@@ -198,10 +208,110 @@ export function RatioAnalysisModule() {
           </div>
         </div>
 
+        {/* Latest Period Quick Highlights */}
+        {latestRow && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardContent className="pt-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Current Ratio
+                  </span>
+                  <Badge
+                    variant={
+                      latestRow.current_ratio !== null && latestRow.current_ratio < 1
+                        ? "destructive"
+                        : "secondary"
+                    }
+                    className="text-[11px]"
+                  >
+                    {latestRow.current_ratio !== null && latestRow.current_ratio < 1
+                      ? "Below 1.0x"
+                      : "Healthy"}
+                  </Badge>
+                </div>
+                <div className="mt-2 text-2xl font-bold font-mono">
+                  {formatRatioValue(latestRow.current_ratio, "ratio")}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  As of {formatMonthEndDate(latestRow.month_end)}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Working Capital
+                  </span>
+                  <Badge
+                    variant={latestRow.working_capital < 0 ? "destructive" : "secondary"}
+                    className="text-[11px]"
+                  >
+                    {latestRow.working_capital < 0 ? "Negative" : "Positive"}
+                  </Badge>
+                </div>
+                <div className="mt-2 text-2xl font-bold font-mono truncate">
+                  {formatRatioValue(latestRow.working_capital, "currency", latestRow.currency_code)}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Current Assets minus Liabilities
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Debt-to-Equity
+                  </span>
+                  <Badge variant="outline" className="text-[11px]">
+                    Leverage
+                  </Badge>
+                </div>
+                <div className="mt-2 text-2xl font-bold font-mono">
+                  {formatRatioValue(latestRow.debt_to_equity, "ratio")}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Debt Ratio: {formatRatioValue(latestRow.debt_ratio, "percent")}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Net Profit Margin
+                  </span>
+                  <Badge
+                    variant={
+                      latestRow.net_margin !== null && latestRow.net_margin < 0
+                        ? "destructive"
+                        : "secondary"
+                    }
+                    className="text-[11px]"
+                  >
+                    Profitability
+                  </Badge>
+                </div>
+                <div className="mt-2 text-2xl font-bold font-mono">
+                  {formatRatioValue(latestRow.net_margin, "percent")}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Gross Margin: {formatRatioValue(latestRow.gross_margin, "percent")}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Filters & Table */}
         <Card>
-          <CardHeader className="space-y-4 pb-3">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <CardHeader className="space-y-4 pb-4">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <CardTitle className="text-base">
                   Calculated Ratios &amp; Metrics ({ratioRows.length} period
@@ -215,7 +325,7 @@ export function RatioAnalysisModule() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                  <SelectTrigger className="w-[230px] h-9">
+                  <SelectTrigger className="h-9 w-[260px] overflow-hidden [&>span]:truncate">
                     <SelectValue placeholder="Select company" />
                   </SelectTrigger>
                   <SelectContent>
@@ -227,33 +337,63 @@ export function RatioAnalysisModule() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  className="h-9 w-[150px]"
-                  title="From Month End"
-                />
-                <Input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  className="h-9 w-[150px]"
-                  title="To Month End"
-                />
-                <Button variant="outline" size="icon" className="h-9 w-9" onClick={refresh}>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">From</span>
+                  <Input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className="h-9 w-[145px]"
+                    title="From Month End"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">To</span>
+                  <Input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    className="h-9 w-[145px]"
+                    title="To Month End"
+                  />
+                </div>
+                {(fromDate || toDate) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 px-2 text-xs text-muted-foreground"
+                    onClick={() => {
+                      setFromDate("");
+                      setToDate("");
+                    }}
+                  >
+                    <X className="mr-1 h-3.5 w-3.5" />
+                    Clear
+                  </Button>
+                )}
+                <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={refresh}>
                   <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                 </Button>
               </div>
             </div>
 
             <Tabs value={category} onValueChange={(v) => setCategory(v as CategoryFilter)}>
-              <TabsList>
-                <TabsTrigger value="all">All Metrics (16)</TabsTrigger>
-                <TabsTrigger value="liquidity">Liquidity</TabsTrigger>
-                <TabsTrigger value="leverage">Leverage</TabsTrigger>
-                <TabsTrigger value="profitability">Profitability</TabsTrigger>
-                <TabsTrigger value="cashflow">Cash Flow &amp; DPO</TabsTrigger>
+              <TabsList className="h-auto w-fit flex-wrap gap-1 p-1">
+                <TabsTrigger value="all" className="px-3 py-1.5 text-xs whitespace-nowrap">
+                  All Metrics (16)
+                </TabsTrigger>
+                <TabsTrigger value="liquidity" className="px-3 py-1.5 text-xs whitespace-nowrap">
+                  Liquidity
+                </TabsTrigger>
+                <TabsTrigger value="leverage" className="px-3 py-1.5 text-xs whitespace-nowrap">
+                  Leverage
+                </TabsTrigger>
+                <TabsTrigger value="profitability" className="px-3 py-1.5 text-xs whitespace-nowrap">
+                  Profitability
+                </TabsTrigger>
+                <TabsTrigger value="cashflow" className="px-3 py-1.5 text-xs whitespace-nowrap">
+                  Cash Flow &amp; DPO
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </CardHeader>
@@ -279,20 +419,23 @@ export function RatioAnalysisModule() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-md border">
+              <div className="overflow-x-auto rounded-lg border">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="sticky left-0 z-10 bg-background whitespace-nowrap">
+                  <TableHeader className="bg-muted/40">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="sticky left-0 z-10 border-r bg-muted/80 px-4 py-3 text-xs font-semibold whitespace-nowrap backdrop-blur-sm">
                         Month End
                       </TableHead>
                       {visibleColumns.map((col) => (
-                        <TableHead key={col.key} className="text-right whitespace-nowrap">
-                          <div className="inline-flex items-center justify-end gap-1">
-                            <span>{col.label}</span>
+                        <TableHead
+                          key={col.key}
+                          className="px-4 py-3 text-right text-xs font-semibold whitespace-nowrap"
+                        >
+                          <div className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
+                            <span className="whitespace-nowrap">{col.label}</span>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Info className="h-3.5 w-3.5 cursor-help text-muted-foreground" />
+                                <Info className="h-3.5 w-3.5 shrink-0 cursor-help text-muted-foreground/80 hover:text-foreground" />
                               </TooltipTrigger>
                               <TooltipContent className="max-w-xs space-y-1">
                                 <p className="font-semibold">{col.label}</p>
@@ -309,8 +452,11 @@ export function RatioAnalysisModule() {
                   </TableHeader>
                   <TableBody>
                     {ratioRows.map((row) => (
-                      <TableRow key={`${row.company_id}-${row.month_end}`}>
-                        <TableCell className="sticky left-0 z-10 bg-background font-medium whitespace-nowrap">
+                      <TableRow
+                        key={`${row.company_id}-${row.month_end}`}
+                        className="even:bg-muted/15 hover:bg-muted/35"
+                      >
+                        <TableCell className="sticky left-0 z-10 border-r bg-card px-4 py-3 text-xs font-medium whitespace-nowrap">
                           {formatMonthEndDate(row.month_end)}
                         </TableCell>
                         {visibleColumns.map((col) => {
@@ -324,8 +470,8 @@ export function RatioAnalysisModule() {
                           return (
                             <TableCell
                               key={col.key}
-                              className={`text-right font-mono text-xs whitespace-nowrap ${
-                                isWarning ? "text-destructive font-semibold" : ""
+                              className={`px-4 py-3 text-right font-mono text-xs tabular-nums whitespace-nowrap ${
+                                isWarning ? "font-semibold text-destructive" : ""
                               }`}
                             >
                               {formatRatioValue(numVal, col.format, row.currency_code)}
@@ -344,4 +490,3 @@ export function RatioAnalysisModule() {
     </TooltipProvider>
   );
 }
-
