@@ -1,12 +1,9 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   AlertTriangle,
-  Calculator,
   FileSpreadsheet,
-  LayoutDashboard,
   Loader2,
   Pencil,
   Plus,
@@ -130,18 +127,6 @@ export function MonthlyInputModule() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/holdings/financial-management/ratio-analysis">
-              <Calculator className="mr-1.5 h-4 w-4" />
-              Ratio Analysis
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/holdings/financial-management/dashboard">
-              <LayoutDashboard className="mr-1.5 h-4 w-4" />
-              Dashboard
-            </Link>
-          </Button>
           <Button size="sm" onClick={handleOpenCreate}>
             <Plus className="mr-1.5 h-4 w-4" />
             Add Monthly Input

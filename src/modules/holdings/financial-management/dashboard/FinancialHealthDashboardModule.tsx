@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Bar,
   BarChart,
@@ -16,9 +15,7 @@ import {
   YAxis,
 } from "recharts";
 import {
-  Calculator,
   Calendar,
-  FileSpreadsheet,
   Info,
   LayoutDashboard,
   Loader2,
@@ -147,31 +144,15 @@ export function FinancialHealthDashboardModule() {
     <TooltipProvider>
       <div className="space-y-6 p-4 md:p-6">
         {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-              <LayoutDashboard className="h-6 w-6 text-primary" />
-              Financial Health Dashboard
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Latest reporting month snapshot, key financial ratios, and multi-month liquidity &amp;
-              margin trends.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/holdings/financial-management/monthly-input">
-                <FileSpreadsheet className="mr-1.5 h-4 w-4" />
-                Monthly Input
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/holdings/financial-management/ratio-analysis">
-                <Calculator className="mr-1.5 h-4 w-4" />
-                Ratio Analysis
-              </Link>
-            </Button>
-          </div>
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+            <LayoutDashboard className="h-6 w-6 text-primary" />
+            Financial Health Dashboard
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Latest reporting month snapshot, key financial ratios, and multi-month liquidity &amp;
+            margin trends.
+          </p>
         </div>
 
         {/* Filter Controls */}
@@ -245,11 +226,6 @@ export function FinancialHealthDashboardModule() {
               <p className="mt-1 text-xs text-muted-foreground">
                 Add your first reporting period in Monthly Inputs to populate the dashboard.
               </p>
-              <Button size="sm" className="mt-4" asChild>
-                <Link href="/holdings/financial-management/monthly-input">
-                  Go to Monthly Input
-                </Link>
-              </Button>
             </CardContent>
           </Card>
         ) : (

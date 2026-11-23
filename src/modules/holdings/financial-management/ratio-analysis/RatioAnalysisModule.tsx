@@ -1,16 +1,13 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Link from "next/link";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import {
   BookOpen,
   Calculator,
   Download,
-  FileSpreadsheet,
   Info,
-  LayoutDashboard,
   Loader2,
   RefreshCw,
 } from "lucide-react";
@@ -148,18 +145,6 @@ export function RatioAnalysisModule() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/holdings/financial-management/monthly-input">
-                <FileSpreadsheet className="mr-1.5 h-4 w-4" />
-                Monthly Input
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/holdings/financial-management/dashboard">
-                <LayoutDashboard className="mr-1.5 h-4 w-4" />
-                Dashboard
-              </Link>
-            </Button>
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
@@ -291,11 +276,6 @@ export function RatioAnalysisModule() {
                 <p className="mt-1 text-xs text-muted-foreground">
                   Add monthly figures in Monthly Inputs to view calculated metrics here.
                 </p>
-                <Button size="sm" className="mt-4" asChild>
-                  <Link href="/holdings/financial-management/monthly-input">
-                    Go to Monthly Input
-                  </Link>
-                </Button>
               </div>
             ) : (
               <div className="overflow-x-auto rounded-md border">
