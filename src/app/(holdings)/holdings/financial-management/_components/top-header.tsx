@@ -28,31 +28,33 @@ export function TopHeader() {
   });
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
-      <div className="flex flex-1 items-center gap-2 px-3">
-        <SidebarTrigger className="hover:bg-accent hover:text-accent-foreground" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
-        <Breadcrumb>
-          <BreadcrumbList>
+    <header className="relative z-20 flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background px-4">
+      <div className="flex min-w-0 flex-1 items-center gap-2 px-1">
+        <SidebarTrigger className="shrink-0 hover:bg-accent hover:text-accent-foreground" />
+        <Separator orientation="vertical" className="mr-2 h-4 shrink-0" />
+        <Breadcrumb className="min-w-0">
+          <BreadcrumbList className="flex-nowrap overflow-hidden">
             {breadcrumbs.map((crumb) => (
               <React.Fragment key={crumb.href}>
-                <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbItem className="hidden md:block truncate">
                   {crumb.isLast ? (
-                    <BreadcrumbPage className="font-semibold text-primary">
+                    <BreadcrumbPage className="font-semibold text-primary truncate">
                       {crumb.title}
                     </BreadcrumbPage>
                   ) : (
-                    <BreadcrumbLink href={crumb.href}>{crumb.title}</BreadcrumbLink>
+                    <BreadcrumbLink href={crumb.href} className="truncate">
+                      {crumb.title}
+                    </BreadcrumbLink>
                   )}
                 </BreadcrumbItem>
-                {!crumb.isLast && <BreadcrumbSeparator className="hidden md:block" />}
+                {!crumb.isLast && <BreadcrumbSeparator className="hidden md:block shrink-0" />}
               </React.Fragment>
             ))}
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <div className="flex items-center gap-2">
-        <div className="w-56">
+      <div className="flex shrink-0 items-center gap-2">
+        <div className="w-52 max-w-full">
           <NavUser
             user={{
               name: "dev vertex",
