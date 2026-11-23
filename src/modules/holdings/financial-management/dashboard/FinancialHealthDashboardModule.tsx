@@ -249,9 +249,16 @@ export function FinancialHealthDashboardModule() {
                         <TooltipTrigger asChild>
                           <Info className="h-3.5 w-3.5 cursor-help text-muted-foreground" />
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs space-y-1">
+                        <TooltipContent className="max-w-xs space-y-1.5">
                           <p className="font-mono text-[11px]">{meta.formula}</p>
-                          <p className="text-[11px] text-muted-foreground">{meta.interpretation}</p>
+                          <p className="text-[11px]">
+                            <span className="font-semibold">What it measures: </span>
+                            {meta.whatItMeasures}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            <span className="font-semibold text-foreground">Management question: </span>
+                            {meta.managementQuestion}
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </CardHeader>
@@ -430,8 +437,19 @@ export function FinancialHealthDashboardModule() {
                                 <span className="text-xs text-muted-foreground">—</span>
                               )}
                             </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {metric.interpretation}
+                            <TableCell className="text-xs leading-relaxed">
+                              <p className="text-foreground/90">
+                                <span className="font-semibold text-foreground">
+                                  What it measures:{" "}
+                                </span>
+                                {metric.whatItMeasures}
+                              </p>
+                              <p className="mt-1 text-muted-foreground">
+                                <span className="font-semibold text-foreground/80">
+                                  Management question:{" "}
+                                </span>
+                                {metric.managementQuestion}
+                              </p>
                             </TableCell>
                           </TableRow>
                         );

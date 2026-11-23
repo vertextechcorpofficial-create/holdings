@@ -171,20 +171,31 @@ export function RatioAnalysisModule() {
                       <TableRow>
                         <TableHead className="px-4 py-3 whitespace-nowrap">Metric</TableHead>
                         <TableHead className="px-4 py-3 whitespace-nowrap">Formula</TableHead>
-                        <TableHead className="px-4 py-3">Interpretation / Caution</TableHead>
+                        <TableHead className="px-4 py-3">What It Measures &amp; Management Question</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {RATIO_GUIDE.map((item) => (
                         <TableRow key={item.key} className="even:bg-muted/15">
-                          <TableCell className="px-4 py-2.5 font-medium whitespace-nowrap">
+                          <TableCell className="px-4 py-2.5 font-medium whitespace-nowrap align-top">
                             {item.label}
                           </TableCell>
-                          <TableCell className="px-4 py-2.5 text-xs font-mono">
+                          <TableCell className="px-4 py-2.5 text-xs font-mono align-top">
                             {item.formula}
                           </TableCell>
-                          <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
-                            {item.interpretation}
+                          <TableCell className="px-4 py-2.5 text-xs leading-relaxed align-top">
+                            <p className="text-foreground/90">
+                              <span className="font-semibold text-foreground">
+                                What it measures:{" "}
+                              </span>
+                              {item.whatItMeasures}
+                            </p>
+                            <p className="mt-1 text-muted-foreground">
+                              <span className="font-semibold text-foreground/80">
+                                Management question:{" "}
+                              </span>
+                              {item.managementQuestion}
+                            </p>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -437,11 +448,18 @@ export function RatioAnalysisModule() {
                               <TooltipTrigger asChild>
                                 <Info className="h-3.5 w-3.5 shrink-0 cursor-help text-muted-foreground/80 hover:text-foreground" />
                               </TooltipTrigger>
-                              <TooltipContent className="max-w-xs space-y-1">
+                              <TooltipContent className="max-w-xs space-y-1.5">
                                 <p className="font-semibold">{col.label}</p>
                                 <p className="font-mono text-[11px]">{col.formula}</p>
+                                <p className="text-[11px]">
+                                  <span className="font-semibold">What it measures: </span>
+                                  {col.whatItMeasures}
+                                </p>
                                 <p className="text-[11px] text-muted-foreground">
-                                  {col.interpretation}
+                                  <span className="font-semibold text-foreground">
+                                    Management question:{" "}
+                                  </span>
+                                  {col.managementQuestion}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
