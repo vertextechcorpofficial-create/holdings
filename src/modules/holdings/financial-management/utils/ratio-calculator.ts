@@ -398,3 +398,4 @@ export function formatRatioValue(
       return value.toFixed(2);
   }
 }
+

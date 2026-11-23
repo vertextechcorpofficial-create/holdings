@@ -115,3 +115,4 @@ export async function deleteMonthlyInput(id: number): Promise<void> {
     throw new Error(`Failed to delete monthly input ${id} (${response.status}): ${text}`);
   }
 }
+

@@ -65,3 +65,4 @@ export async function DELETE(
     return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }
+
