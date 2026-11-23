@@ -11,15 +11,15 @@ export interface FetchInventoryParams {
 
 export const FALLBACK_INVENTORY_DATA: InventoryResponse = {
   kpis: {
-    totalValuation: 48920150.8,
-    totalStockUnits: 1675092,
-    inStockSkuCount: 2342,
-    lowStockCount: 48,
+    totalValuation: 39655380.77,
+    totalStockUnits: 200619,
+    inStockSkuCount: 1161,
+    lowStockCount: 45,
     criticalStockCount: 12,
-    stockHealthRate: 92.5,
-    topCategoryName: "Oils & Shortening",
-    topCategoryValuation: 21450800.0,
-    averageUnitCost: 29.2,
+    stockHealthRate: 91.5,
+    topCategoryName: "Cooking Oils & Shortening",
+    topCategoryValuation: 17850000.0,
+    averageUnitCost: 197.66,
   },
   categories: [
     {

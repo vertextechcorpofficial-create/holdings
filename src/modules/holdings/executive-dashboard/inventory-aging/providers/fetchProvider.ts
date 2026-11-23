@@ -13,17 +13,17 @@ export interface FetchInventoryAgingParams {
 
 export const FALLBACK_INVENTORY_AGING_DATA: InventoryAgingResponse = {
   kpis: {
-    totalValuation: 24680450.0,
-    totalSlobValue: 4892150.0,
-    slobRiskRatio: 19.8,
-    totalStockUnits: 894500,
-    slobUnits: 142300,
-    totalSkuCount: 1840,
-    criticalSlobSkuCount: 382,
-    atRiskSkuCount: 295,
+    totalValuation: 39655380.77,
+    totalSlobValue: 1985380.77,
+    slobRiskRatio: 5.0,
+    totalStockUnits: 200619,
+    slobUnits: 10619,
+    totalSkuCount: 1161,
+    criticalSlobSkuCount: 50,
+    atRiskSkuCount: 221,
     topAgedProductName: "Mama Pina's Palm Oil 17kg Tin",
-    topAgedProductValue: 845200.0,
-    averageAgingDays: 78.4,
+    topAgedProductValue: 485000.0,
+    averageAgingDays: 42.5,
   },
   brackets: [
     {

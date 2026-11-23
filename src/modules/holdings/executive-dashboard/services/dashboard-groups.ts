@@ -2,6 +2,7 @@ export interface DashboardGroup {
   id: number;
   category: string;
   group_name: string;
+  ai_analysis_tier?: string | null;
   directus?: string;
   directus_token?: string;
   springboot?: string;

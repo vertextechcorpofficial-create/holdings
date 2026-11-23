@@ -11,7 +11,10 @@ export const fetchAreaDrilldownData = async (
 
     try {
         const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) throw new Error(`API Failed: ${res.status}`);
+        if (!res.ok) {
+            console.warn(`Territory drill-down API unavailable (${res.status}) for group ${gId}`);
+            return [];
+        }
 
         const rawData = await res.json();
 
@@ -27,7 +30,7 @@ export const fetchAreaDrilldownData = async (
         }
         return [];
     } catch (error) {
-        console.error("Failed to fetch territory drill-down data:", error);
+        console.warn("Failed to fetch territory drill-down data:", error);
         return [];
     }
 };

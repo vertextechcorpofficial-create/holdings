@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { LayoutDashboard, Trophy, ChevronRight } from "lucide-react";
 import { format, startOfMonth, endOfMonth, parseISO } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { BasicAIAnalysis, generateDistributionSalesAIBullets } from "@/modules/holdings/executive-dashboard/components/BasicAIAnalysis";
 
 import { fetchExecutiveHealthData, fetchCompanyTargets, getDivisions } from "@/modules/holdings/executive-dashboard/executive-health/providers/fetchProvider";
 
@@ -20,7 +20,12 @@ const formatShort = (val: number) => {
 };
 
 interface GroupPreviewCardProps {
-    group: { id: number; group_name: string; [key: string]: unknown };
+    group: {
+        id: number;
+        group_name: string;
+        ai_analysis_tier?: string | null;
+        [key: string]: unknown;
+    };
     startDate?: string;
     endDate?: string;
 }
@@ -29,6 +34,8 @@ export function GroupPreviewCard({ group, startDate: propStartDate, endDate: pro
     const [loading, setLoading] = useState(true);
     const [sales, setSales] = useState(0);
     const [target, setTarget] = useState(0);
+    const [topDivision, setTopDivision] = useState<{ name: string; sales: number } | null>(null);
+    const [divisionCount, setDivisionCount] = useState<number>(0);
     const [syncPending, setSyncPending] = useState(false);
 
     const today = new Date();
@@ -57,16 +64,34 @@ export function GroupPreviewCard({ group, startDate: propStartDate, endDate: pro
                         : [];
 
                     let totalSales = 0;
+                    const divSalesMap: Record<string, number> = {};
+
                     if (metadataDivs.length > 0) {
                         const activeDivisionIds = new Set(metadataDivs.map(d => d.division_id));
                         const activeDivisionNames = new Set(metadataDivs.map(d => (d.division_name || "").toUpperCase()));
 
-                        totalSales = rawData.reduce((sum, item) => {
+                        rawData.forEach((item) => {
                             const isBiaDivision = activeDivisionIds.has(item.divisionId) || activeDivisionNames.has((item.divisionName || "").toUpperCase());
-                            return isBiaDivision ? sum + (item.netAmount || 0) : sum;
-                        }, 0);
+                            if (isBiaDivision) {
+                                const amt = item.netAmount || 0;
+                                totalSales += amt;
+                                const dName = item.divisionName || "Primary Division";
+                                divSalesMap[dName] = (divSalesMap[dName] || 0) + amt;
+                            }
+                        });
                     } else {
-                        totalSales = rawData.reduce((sum, item) => sum + (item.netAmount || 0), 0);
+                        rawData.forEach((item) => {
+                            const amt = item.netAmount || 0;
+                            totalSales += amt;
+                            const dName = item.divisionName || "Primary Division";
+                            divSalesMap[dName] = (divSalesMap[dName] || 0) + amt;
+                        });
+                    }
+
+                    const sortedDivs = Object.entries(divSalesMap).sort((a, b) => b[1] - a[1]);
+                    if (sortedDivs.length > 0) {
+                        setTopDivision({ name: sortedDivs[0][0], sales: sortedDivs[0][1] });
+                        setDivisionCount(sortedDivs.length);
                     }
 
                     setSales(totalSales);
@@ -96,6 +121,17 @@ export function GroupPreviewCard({ group, startDate: propStartDate, endDate: pro
 
     const achievement = target > 0 ? (sales / target) * 100 : 0;
     const isAchieved = achievement >= 100;
+
+    const aiBullets = useMemo(() => {
+        return generateDistributionSalesAIBullets({
+            sales,
+            target,
+            achievement,
+            topDivisionName: topDivision?.name,
+            topDivisionSales: topDivision?.sales,
+            divisionCount,
+        });
+    }, [sales, target, achievement, topDivision, divisionCount]);
 
     return (
         <Link 
@@ -184,6 +220,15 @@ export function GroupPreviewCard({ group, startDate: propStartDate, endDate: pro
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Basic AI Analysis (Bullet Points) */}
+                            <BasicAIAnalysis
+                                tier={group.ai_analysis_tier as string}
+                                bulletPoints={aiBullets}
+                                loading={loading}
+                                variant="compact"
+                                className="mt-2"
+                            />
                         </div>
                     )}
 
