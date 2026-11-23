@@ -113,7 +113,6 @@ export function generateDistributionSalesAIBullets(params: {
 
   const formatAmount = (val: number) => {
     const abs = Math.abs(val);
-    const sign = val < 0 ? "-" : "+";
     if (abs >= 1_000_000) return `${val < 0 ? "-" : ""}₱${(abs / 1_000_000).toFixed(2)}M`;
     if (abs >= 1_000) return `${val < 0 ? "-" : ""}₱${(abs / 1_000).toFixed(0)}k`;
     return `${val < 0 ? "-" : ""}₱${abs.toFixed(0)}`;
