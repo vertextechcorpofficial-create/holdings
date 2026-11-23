@@ -104,3 +104,4 @@ export function decryptFinancialPayload<T extends Record<string, unknown>>(
 
   return JSON.parse(decrypted) as T;
 }
+
