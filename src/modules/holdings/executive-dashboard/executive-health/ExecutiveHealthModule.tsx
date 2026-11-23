@@ -426,10 +426,10 @@ function ExecutiveHealthContent({ groupId, aiAnalysisTier }: { groupId: string; 
     );
 }
 
-export default function ExecutiveHealthModule({ groupId }: { groupId: string }) {
+export default function ExecutiveHealthModule({ groupId, aiAnalysisTier }: { groupId: string; aiAnalysisTier?: string | null }) {
     return (
         <Suspense fallback={<div className="flex h-screen w-full items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}>
-            <ExecutiveHealthContent groupId={groupId} />
+            <ExecutiveHealthContent groupId={groupId} aiAnalysisTier={aiAnalysisTier} />
         </Suspense>
     );
 }
