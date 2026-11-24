@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import {
   CompanyOption,
   FinancialHealthMonthly,
@@ -80,19 +79,51 @@ function getDefaultMonthEnd(): string {
   return `${y}-${m}-${d}`;
 }
 
-function toStr(val: number | null | undefined, blankIfNull = false): string {
-  if (val === null || val === undefined) return blankIfNull ? "" : "0";
-  return String(val);
+/**
+ * Formats a user-typed numeric string with thousand-separator commas
+ * while preserving negative signs, decimals, and stripping stray leading zeros.
+ */
+function formatNumberInput(raw: string): string {
+  const cleaned = raw.replace(/,/g, "").replace(/[^\d.-]/g, "");
+  if (cleaned === "" || cleaned === "-") return cleaned;
+
+  const isNegative = cleaned.startsWith("-");
+  const unsigned = cleaned.replace(/-/g, "");
+
+  const dotIdx = unsigned.indexOf(".");
+  let intPart = dotIdx >= 0 ? unsigned.slice(0, dotIdx) : unsigned;
+  const decPart = dotIdx >= 0 ? unsigned.slice(dotIdx + 1).replace(/\./g, "").slice(0, 2) : null;
+
+  // Strip redundant leading zeros (e.g. "05" -> "5", "00" -> "0", ".5" -> "0.5")
+  intPart = intPart.replace(/^0+(?=\d)/, "");
+  if (intPart === "" && decPart !== null) intPart = "0";
+
+  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const sign = isNegative ? "-" : "";
+
+  if (decPart !== null) {
+    return `${sign}${formattedInt}.${decPart}`;
+  }
+  return `${sign}${formattedInt}`;
+}
+
+function toFormattedStr(val: number | null | undefined, blankIfZero = false): string {
+  if (val === null || val === undefined || !Number.isFinite(val)) return "";
+  if (blankIfZero && val === 0) return "";
+  return formatNumberInput(String(val));
 }
 
 function toNum(val: string): number {
-  const n = Number(val);
+  const cleaned = val.replace(/,/g, "").trim();
+  if (cleaned === "" || cleaned === "-" || cleaned === ".") return 0;
+  const n = Number(cleaned);
   return Number.isFinite(n) ? n : 0;
 }
 
 function toNullableNum(val: string): number | null {
-  if (val.trim() === "") return null;
-  const n = Number(val);
+  const cleaned = val.replace(/,/g, "").trim();
+  if (cleaned === "" || cleaned === "-" || cleaned === ".") return null;
+  const n = Number(cleaned);
   return Number.isFinite(n) ? n : null;
 }
 
@@ -100,24 +131,24 @@ const createEmptyState = (defaultCompanyId?: number): FormState => ({
   company_id: defaultCompanyId ? String(defaultCompanyId) : "",
   month_end: getDefaultMonthEnd(),
   currency_code: "PHP",
-  cash_and_equivalents: "0",
-  short_term_investments: "0",
-  trade_receivables: "0",
-  inventory: "0",
-  other_current_assets: "0",
+  cash_and_equivalents: "",
+  short_term_investments: "",
+  trade_receivables: "",
+  inventory: "",
+  other_current_assets: "",
   total_current_assets_override: "",
-  trade_payables: "0",
-  non_trade_payables: "0",
-  current_portion_loans: "0",
-  other_current_liabilities: "0",
+  trade_payables: "",
+  non_trade_payables: "",
+  current_portion_loans: "",
+  other_current_liabilities: "",
   total_current_liabilities_override: "",
-  long_term_loans: "0",
-  other_non_current_liabilities: "0",
-  total_assets: "0",
-  total_equity: "0",
-  revenue: "0",
-  cost_of_goods_sold: "0",
-  net_income: "0",
+  long_term_loans: "",
+  other_non_current_liabilities: "",
+  total_assets: "",
+  total_equity: "",
+  revenue: "",
+  cost_of_goods_sold: "",
+  net_income: "",
   operating_cash_flow: "",
   credit_purchases: "",
   management_notes: "",
@@ -143,29 +174,35 @@ export function MonthlyInputFormDialog({
         company_id: String(editingRecord.company_id),
         month_end: editingRecord.month_end,
         currency_code: editingRecord.currency_code || "PHP",
-        cash_and_equivalents: toStr(editingRecord.cash_and_equivalents),
-        short_term_investments: toStr(editingRecord.short_term_investments),
-        trade_receivables: toStr(editingRecord.trade_receivables),
-        inventory: toStr(editingRecord.inventory),
-        other_current_assets: toStr(editingRecord.other_current_assets),
-        total_current_assets_override: toStr(editingRecord.total_current_assets_override, true),
-        trade_payables: toStr(editingRecord.trade_payables),
-        non_trade_payables: toStr(editingRecord.non_trade_payables),
-        current_portion_loans: toStr(editingRecord.current_portion_loans),
-        other_current_liabilities: toStr(editingRecord.other_current_liabilities),
-        total_current_liabilities_override: toStr(
+        cash_and_equivalents: toFormattedStr(editingRecord.cash_and_equivalents, true),
+        short_term_investments: toFormattedStr(editingRecord.short_term_investments, true),
+        trade_receivables: toFormattedStr(editingRecord.trade_receivables, true),
+        inventory: toFormattedStr(editingRecord.inventory, true),
+        other_current_assets: toFormattedStr(editingRecord.other_current_assets, true),
+        total_current_assets_override: toFormattedStr(
+          editingRecord.total_current_assets_override,
+          false
+        ),
+        trade_payables: toFormattedStr(editingRecord.trade_payables, true),
+        non_trade_payables: toFormattedStr(editingRecord.non_trade_payables, true),
+        current_portion_loans: toFormattedStr(editingRecord.current_portion_loans, true),
+        other_current_liabilities: toFormattedStr(editingRecord.other_current_liabilities, true),
+        total_current_liabilities_override: toFormattedStr(
           editingRecord.total_current_liabilities_override,
+          false
+        ),
+        long_term_loans: toFormattedStr(editingRecord.long_term_loans, true),
+        other_non_current_liabilities: toFormattedStr(
+          editingRecord.other_non_current_liabilities,
           true
         ),
-        long_term_loans: toStr(editingRecord.long_term_loans),
-        other_non_current_liabilities: toStr(editingRecord.other_non_current_liabilities),
-        total_assets: toStr(editingRecord.total_assets),
-        total_equity: toStr(editingRecord.total_equity),
-        revenue: toStr(editingRecord.revenue),
-        cost_of_goods_sold: toStr(editingRecord.cost_of_goods_sold),
-        net_income: toStr(editingRecord.net_income),
-        operating_cash_flow: toStr(editingRecord.operating_cash_flow, true),
-        credit_purchases: toStr(editingRecord.credit_purchases, true),
+        total_assets: toFormattedStr(editingRecord.total_assets, true),
+        total_equity: toFormattedStr(editingRecord.total_equity, true),
+        revenue: toFormattedStr(editingRecord.revenue, true),
+        cost_of_goods_sold: toFormattedStr(editingRecord.cost_of_goods_sold, true),
+        net_income: toFormattedStr(editingRecord.net_income, true),
+        operating_cash_flow: toFormattedStr(editingRecord.operating_cash_flow, false),
+        credit_purchases: toFormattedStr(editingRecord.credit_purchases, false),
         management_notes: editingRecord.management_notes ?? "",
       });
     } else {
@@ -177,6 +214,10 @@ export function MonthlyInputFormDialog({
 
   const setField = (key: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const setFormattedNumberField = (key: keyof FormState, raw: string) => {
+    setForm((prev) => ({ ...prev, [key]: formatNumberInput(raw) }));
   };
 
   const caSum = useMemo(
@@ -217,6 +258,8 @@ export function MonthlyInputFormDialog({
   const clOverride = toNullableNum(form.total_current_liabilities_override);
   const caVariance = caOverride !== null && Math.abs(caOverride - caSum) > 0.01;
   const clVariance = clOverride !== null && Math.abs(clOverride - clSum) > 0.01;
+
+  const currencySymbol = form.currency_code === "USD" ? "$" : "₱";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,21 +321,31 @@ export function MonthlyInputFormDialog({
     optional = false
   ) => (
     <div className="flex flex-col justify-between gap-1.5">
-      <Label htmlFor={key} className="text-xs font-medium leading-tight">
+      <Label htmlFor={key} className="text-xs font-medium leading-tight text-foreground/90">
         <span>{label}</span>
         {optional && (
           <span className="ml-1 text-[11px] font-normal text-muted-foreground">(opt.)</span>
         )}
       </Label>
-      <Input
-        id={key}
-        type="number"
-        step="0.01"
-        value={form[key]}
-        onChange={(e) => setField(key, e.target.value)}
-        placeholder={placeholder}
-        className="h-9 w-full text-right font-mono"
-      />
+      <div className="relative">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+          {currencySymbol}
+        </span>
+        <Input
+          id={key}
+          type="text"
+          inputMode="decimal"
+          value={form[key]}
+          onFocus={() => {
+            if (form[key] === "0" || form[key] === "0.00") {
+              setField(key, "");
+            }
+          }}
+          onChange={(e) => setFormattedNumberField(key, e.target.value)}
+          placeholder={placeholder}
+          className="h-9 w-full pl-7 pr-3 text-right font-mono tabular-nums"
+        />
+      </div>
     </div>
   );
 
@@ -304,12 +357,12 @@ export function MonthlyInputFormDialog({
             {editingRecord ? "Edit Monthly Financial Input" : "Add Monthly Financial Input"}
           </DialogTitle>
           <DialogDescription>
-            Enter month-end balances and monthly income/cash-flow figures using one consistent
-            currency and scale.
+            Enter month-end balances and monthly income/cash-flow figures. Commas are formatted
+            automatically as you type; blank required fields default to 0.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 pt-1">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           {formError && (
             <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {formError}
@@ -317,64 +370,64 @@ export function MonthlyInputFormDialog({
           )}
 
           {/* Section 1: Period & Company */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
-            <div className="flex flex-col gap-1.5 sm:col-span-6">
-              <Label className="text-xs font-medium">Company / Subsidiary</Label>
-              <Select
-                value={form.company_id}
-                onValueChange={(val) => setField("company_id", val)}
-              >
-                <SelectTrigger className="h-9 w-full overflow-hidden [&>span]:truncate">
-                  <SelectValue placeholder="Select company" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map((c) => (
-                    <SelectItem key={c.company_id} value={String(c.company_id)}>
-                      {c.company_name || c.company_code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5 sm:col-span-3">
-              <Label htmlFor="month_end" className="text-xs font-medium">
-                Month End Date
-              </Label>
-              <Input
-                id="month_end"
-                type="date"
-                value={form.month_end}
-                onChange={(e) => setField("month_end", e.target.value)}
-                className="h-9 w-full"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1.5 sm:col-span-3">
-              <Label className="text-xs font-medium">Currency</Label>
-              <Select
-                value={form.currency_code}
-                onValueChange={(val) => setField("currency_code", val)}
-              >
-                <SelectTrigger className="h-9 w-full overflow-hidden [&>span]:truncate">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PHP">PHP — Peso</SelectItem>
-                  <SelectItem value="USD">USD — Dollar</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="rounded-lg border bg-muted/20 p-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
+              <div className="flex flex-col gap-1.5 sm:col-span-6">
+                <Label className="text-xs font-medium">Company / Subsidiary</Label>
+                <Select
+                  value={form.company_id}
+                  onValueChange={(val) => setField("company_id", val)}
+                >
+                  <SelectTrigger className="h-9 w-full overflow-hidden bg-background [&>span]:truncate">
+                    <SelectValue placeholder="Select company" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies.map((c) => (
+                      <SelectItem key={c.company_id} value={String(c.company_id)}>
+                        {c.company_name || c.company_code}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5 sm:col-span-3">
+                <Label htmlFor="month_end" className="text-xs font-medium">
+                  Month End Date
+                </Label>
+                <Input
+                  id="month_end"
+                  type="date"
+                  value={form.month_end}
+                  onChange={(e) => setField("month_end", e.target.value)}
+                  className="h-9 w-full bg-background"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 sm:col-span-3">
+                <Label className="text-xs font-medium">Currency</Label>
+                <Select
+                  value={form.currency_code}
+                  onValueChange={(val) => setField("currency_code", val)}
+                >
+                  <SelectTrigger className="h-9 w-full overflow-hidden bg-background [&>span]:truncate">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PHP">PHP — Peso</SelectItem>
+                    <SelectItem value="USD">USD — Dollar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
-          <Separator />
-
           {/* Section 2: Current Assets */}
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="space-y-3 rounded-lg border bg-muted/10 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
               <h4 className="text-sm font-semibold">Current Assets</h4>
-              <span className="text-xs text-muted-foreground">
+              <span className="rounded-md bg-muted px-2.5 py-1 text-xs text-muted-foreground">
                 Component Sum:{" "}
-                <strong className="font-mono text-foreground">
+                <strong className="font-mono text-foreground tabular-nums">
                   {formatRatioValue(caSum, "currency", form.currency_code)}
                 </strong>
               </span>
@@ -404,15 +457,13 @@ export function MonthlyInputFormDialog({
             )}
           </div>
 
-          <Separator />
-
           {/* Section 3: Current Liabilities */}
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="space-y-3 rounded-lg border bg-muted/10 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
               <h4 className="text-sm font-semibold">Current Liabilities</h4>
-              <span className="text-xs text-muted-foreground">
+              <span className="rounded-md bg-muted px-2.5 py-1 text-xs text-muted-foreground">
                 Component Sum:{" "}
-                <strong className="font-mono text-foreground">
+                <strong className="font-mono text-foreground tabular-nums">
                   {formatRatioValue(clSum, "currency", form.currency_code)}
                 </strong>
               </span>
@@ -441,12 +492,12 @@ export function MonthlyInputFormDialog({
             )}
           </div>
 
-          <Separator />
-
           {/* Section 4: Non-Current Liabilities & Equity */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold">Non-Current Liabilities, Assets &amp; Equity</h4>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+          <div className="space-y-3 rounded-lg border bg-muted/10 p-4">
+            <h4 className="border-b pb-2 text-sm font-semibold">
+              Non-Current Liabilities, Assets &amp; Equity
+            </h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
               {renderNumberInput("long_term_loans", "Long-term Loans")}
               {renderNumberInput("other_non_current_liabilities", "Other Non-current Liab.")}
               {renderNumberInput("total_assets", "Total Assets")}
@@ -454,12 +505,12 @@ export function MonthlyInputFormDialog({
             </div>
           </div>
 
-          <Separator />
-
           {/* Section 5: Income & Cash Flow */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold">Monthly Income &amp; Cash Flow</h4>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+          <div className="space-y-3 rounded-lg border bg-muted/10 p-4">
+            <h4 className="border-b pb-2 text-sm font-semibold">
+              Monthly Income &amp; Cash Flow
+            </h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
               {renderNumberInput("revenue", "Revenue")}
               {renderNumberInput("cost_of_goods_sold", "Cost of Goods Sold")}
               {renderNumberInput("net_income", "Net Income")}
@@ -478,13 +529,11 @@ export function MonthlyInputFormDialog({
             </div>
           </div>
 
-          <Separator />
-
           {/* Section 6: Management Notes */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 rounded-lg border bg-muted/10 p-4">
             <Label htmlFor="management_notes" className="text-xs font-medium">
               Management Review Notes{" "}
-              <span className="text-muted-foreground font-normal">(optional)</span>
+              <span className="font-normal text-muted-foreground">(optional)</span>
             </Label>
             <Textarea
               id="management_notes"
@@ -492,10 +541,11 @@ export function MonthlyInputFormDialog({
               value={form.management_notes}
               onChange={(e) => setField("management_notes", e.target.value)}
               placeholder="Document unusual movements, causes, risks, owners, or actions..."
+              className="bg-background"
             />
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="pt-2">
             <Button
               type="button"
               variant="outline"
@@ -514,4 +564,3 @@ export function MonthlyInputFormDialog({
     </Dialog>
   );
 }
-
