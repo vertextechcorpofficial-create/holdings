@@ -20,7 +20,8 @@ import {
   isToday,
   setHours
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, FileText, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, FileText, User, Check, X, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,11 +32,32 @@ import { ConferenceRoomRequestInput } from "../../conference-room-request/types/
 type ViewMode = "month" | "week" | "day";
 
 export const BookingCalendarView: React.FC = () => {
-  const { requests, rooms, isLoading, error } = useBookingCalendar();
+  const { requests, rooms, isLoading, error, updateRequestStatus } = useBookingCalendar();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [selectedRoomId, setSelectedRoomId] = useState<string>("all");
   const [selectedRequest, setSelectedRequest] = useState<ConferenceRoomRequestInput | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+
+  const handleStatusChange = async (status: "approved" | "rejected" | "cancelled") => {
+    if (!selectedRequest?.id) return;
+    setUpdatingStatus(status);
+    try {
+      await updateRequestStatus(selectedRequest.id, status);
+      toast.success(
+        status === "approved"
+          ? "Booking approved. It will now appear on the room kiosk."
+          : status === "rejected"
+          ? "Booking rejected."
+          : "Booking cancelled."
+      );
+      setSelectedRequest(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update booking status");
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
 
   const navigateNext = () => {
     if (viewMode === "month") setCurrentDate(addMonths(currentDate, 1));
@@ -399,8 +421,65 @@ export const BookingCalendarView: React.FC = () => {
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedRequest(null)}>Close</Button>
+          <DialogFooter className="flex flex-wrap items-center justify-between gap-2 sm:justify-between">
+            <div className="flex items-center gap-2">
+              {selectedRequest?.id && selectedRequest.status.toLowerCase() === "pending" && (
+                <>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="bg-emerald-600 text-white hover:bg-emerald-700"
+                    disabled={updatingStatus !== null}
+                    onClick={() => handleStatusChange("approved")}
+                  >
+                    {updatingStatus === "approved" ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="mr-1.5 h-4 w-4" />
+                    )}
+                    Approve
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    disabled={updatingStatus !== null}
+                    onClick={() => handleStatusChange("rejected")}
+                  >
+                    {updatingStatus === "rejected" ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <X className="mr-1.5 h-4 w-4" />
+                    )}
+                    Reject
+                  </Button>
+                </>
+              )}
+              {selectedRequest?.id && selectedRequest.status.toLowerCase() === "approved" && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  disabled={updatingStatus !== null}
+                  onClick={() => handleStatusChange("cancelled")}
+                >
+                  {updatingStatus === "cancelled" ? (
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  ) : (
+                    <X className="mr-1.5 h-4 w-4" />
+                  )}
+                  Cancel Booking
+                </Button>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={updatingStatus !== null}
+              onClick={() => setSelectedRequest(null)}
+            >
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

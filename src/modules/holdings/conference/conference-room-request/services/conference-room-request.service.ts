@@ -203,3 +203,29 @@ export const fetchAllConferenceRoomRequests = async (): Promise<ConferenceRoomRe
   console.log(`[fetchAllConferenceRoomRequests] Success. Retrieved ${data?.data?.length || 0} items.`);
   return data.data || [];
 };
+
+export const updateConferenceRoomRequestStatus = async (
+  id: number,
+  status: "pending" | "approved" | "rejected" | "cancelled"
+): Promise<ConferenceRoomRequestResponse> => {
+  const host = await getHostCompanyDetails();
+
+  const headers: HeadersInit = { "Content-Type": "application/json" };
+  if (host.token) headers["Authorization"] = `Bearer ${host.token}`;
+
+  const endpoint = `${host.url}/items/conference_room_request/${id}`;
+  const response = await fetch(endpoint, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`[updateConferenceRoomRequestStatus] ERROR ${response.status} from ${endpoint}:`, errorText);
+    throw new Error(`Failed to update request status: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return { success: true, data: data.data };
+};
