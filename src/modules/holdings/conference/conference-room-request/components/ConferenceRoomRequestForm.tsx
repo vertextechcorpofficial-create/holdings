@@ -29,9 +29,6 @@ export const ConferenceRoomRequestForm: React.FC<ConferenceRoomRequestFormProps>
       start_time: "",
       end_time: "",
       status: "pending",
-      // Hardcoded values for now, ideally retrieved from auth context
-      requested_by: 1, 
-      requested_by_name: "John Doe",
       company_id: 1,
     },
   });
