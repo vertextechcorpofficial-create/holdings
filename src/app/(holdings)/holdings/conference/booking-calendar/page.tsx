@@ -1,12 +1,9 @@
-import { SidebarInset } from "@/components/ui/sidebar";
 import { BookingCalendarView } from "@/modules/holdings/conference/booking-calendar/components/BookingCalendarView";
 
 export default function BookingCalendarPage() {
   return (
-    <SidebarInset className="bg-slate-50 relative flex w-full h-full flex-col">
-      <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0">
-        <BookingCalendarView />
-      </div>
-    </SidebarInset>
+    <div className="min-h-full w-full bg-slate-50 p-6">
+      <BookingCalendarView />
+    </div>
   );
 }

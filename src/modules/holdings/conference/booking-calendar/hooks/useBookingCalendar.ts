@@ -52,11 +52,29 @@ export const useBookingCalendar = () => {
     fetchData();
   }, [fetchData]);
 
+  const updateRequestStatus = useCallback(
+    async (id: number, status: "pending" | "approved" | "rejected" | "cancelled") => {
+      const res = await fetch(`/api/holdings/conference/conference-room-requests/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || "Failed to update booking status");
+      }
+      await fetchData();
+      return json.data;
+    },
+    [fetchData]
+  );
+
   return {
     requests,
     rooms,
     isLoading,
     error,
-    refresh: fetchData
+    refresh: fetchData,
+    updateRequestStatus,
   };
 };

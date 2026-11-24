@@ -20,42 +20,77 @@ interface HostCompanyDetails {
 }
 
 /**
- * Helper function to retrieve the host company API URL and Token
+ * Helper function to retrieve the host company API URL and Token.
+ * Falls back to local Directus when the configured host company has no
+ * conference rooms or is unreachable.
  */
 async function getHostCompanyDetails(): Promise<HostCompanyDetails> {
-  // 1. Fetch the setting value for conference_room
-  const settingRes = await fetch(`${LOCAL_API_BASE_URL}/items/general_setting?filter[setting_key][_eq]=conference_room`, {
-    method: "GET",
-    headers: getLocalHeaders(),
-    cache: "no-store",
-  });
-  
-  if (!settingRes.ok) throw new Error("Failed to fetch general setting for conference_room");
-  const settingData = await settingRes.json();
-  const companyId = settingData?.data?.[0]?.setting_value;
-  
-  if (!companyId) throw new Error("No conference_room setting found in general_setting");
-
-  // 2. Fetch the company list details for this company
-  const companyRes = await fetch(`${LOCAL_API_BASE_URL}/items/company_list?filter[company_id][_eq]=${companyId}`, {
-    method: "GET",
-    headers: getLocalHeaders(),
-    cache: "no-store",
-  });
-
-  if (!companyRes.ok) throw new Error("Failed to fetch company details");
-  const companyData = await companyRes.json();
-  const company = companyData?.data?.[0];
-
-  console.log(`[getHostCompanyDetails] Fetched companyId: ${companyId}`);
-  console.log(`[getHostCompanyDetails] Fetched company record:`, company);
-
-  if (!company || !company.directus) throw new Error("Target company Directus URL is missing");
-
-  return {
-    url: company.directus.replace(/\/$/, ""),
-    token: company.directus_token || "",
+  const localFallback: HostCompanyDetails = {
+    url: LOCAL_API_BASE_URL.replace(/\/$/, ""),
+    token: LOCAL_DIRECTUS_TOKEN,
   };
+
+  try {
+    // 1. Fetch the setting value for conference_room
+    const settingRes = await fetch(
+      `${localFallback.url}/items/general_setting?filter[setting_key][_eq]=conference_room`,
+      {
+        method: "GET",
+        headers: getLocalHeaders(),
+        cache: "no-store",
+      }
+    );
+
+    if (!settingRes.ok) return localFallback;
+    const settingData = await settingRes.json();
+    const companyId = settingData?.data?.[0]?.setting_value;
+
+    if (!companyId) return localFallback;
+
+    // 2. Fetch the company list details for this company
+    const companyRes = await fetch(
+      `${localFallback.url}/items/company_list?filter[company_id][_eq]=${companyId}`,
+      {
+        method: "GET",
+        headers: getLocalHeaders(),
+        cache: "no-store",
+      }
+    );
+
+    if (!companyRes.ok) return localFallback;
+    const companyData = await companyRes.json();
+    const company = companyData?.data?.[0];
+
+    if (!company || !company.directus) return localFallback;
+
+    const hostUrl = company.directus.replace(/\/$/, "");
+    const hostToken = company.directus_token || "";
+
+    // 3. Verify host actually has conference rooms configured; otherwise fall back to local
+    if (hostUrl !== localFallback.url) {
+      const hostHeaders: HeadersInit = { "Content-Type": "application/json" };
+      if (hostToken) hostHeaders["Authorization"] = `Bearer ${hostToken}`;
+
+      const probeRes = await fetch(`${hostUrl}/items/conference_room?limit=1`, {
+        method: "GET",
+        headers: hostHeaders,
+        cache: "no-store",
+      });
+
+      if (!probeRes.ok) return localFallback;
+      const probeData = await probeRes.json();
+      if (!Array.isArray(probeData?.data) || probeData.data.length === 0) {
+        return localFallback;
+      }
+    }
+
+    return {
+      url: hostUrl,
+      token: hostToken,
+    };
+  } catch {
+    return localFallback;
+  }
 }
 
 export const fetchGlobalConferenceRooms = async (): Promise<ConferenceRoomInput[]> => {
@@ -167,4 +202,30 @@ export const fetchAllConferenceRoomRequests = async (): Promise<ConferenceRoomRe
   const data = await response.json();
   console.log(`[fetchAllConferenceRoomRequests] Success. Retrieved ${data?.data?.length || 0} items.`);
   return data.data || [];
+};
+
+export const updateConferenceRoomRequestStatus = async (
+  id: number,
+  status: "pending" | "approved" | "rejected" | "cancelled"
+): Promise<ConferenceRoomRequestResponse> => {
+  const host = await getHostCompanyDetails();
+
+  const headers: HeadersInit = { "Content-Type": "application/json" };
+  if (host.token) headers["Authorization"] = `Bearer ${host.token}`;
+
+  const endpoint = `${host.url}/items/conference_room_request/${id}`;
+  const response = await fetch(endpoint, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`[updateConferenceRoomRequestStatus] ERROR ${response.status} from ${endpoint}:`, errorText);
+    throw new Error(`Failed to update request status: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return { success: true, data: data.data };
 };
